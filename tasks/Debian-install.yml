@@ -1,0 +1,12 @@
+---
+# file: tasks/Debian-install.yml
+
+- name: Check that APT key is installed.
+  apt_key:
+    url: '{{ jenkins_key }}'
+    state: present
+
+- name: Check that Jenkins APT repository is installed.
+  apt_repository:
+    repo: deb {{ jenkins_repo_url }} debian/'
+    state: present

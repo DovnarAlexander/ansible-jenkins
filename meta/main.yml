@@ -1,0 +1,28 @@
+---
+# file: meta/main.yml
+
+galaxy_info:
+  author: DovnarAlexander
+  description: Jenkins server installation for RHEL\Debian
+  license: Apache
+
+  min_ansible_version: 2.4.0
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - artful
+        - xenial
+        - trusty
+    - name: Debian
+      versions:
+        - jessie
+    - name: EL
+      versions:
+        - 6
+        - 7
+  galaxy_tags:
+    - cicd
+    - jenkins
+
+dependencies: []

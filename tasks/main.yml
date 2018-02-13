@@ -1,0 +1,14 @@
+---
+# file: tasks/main.yml
+
+- name: Set all required facts.
+  import_tasks: set-facts.yml
+
+- name: Prepare instance.
+  import_tasks: prepare.yml
+
+- name: Install Jenkins.
+  import_tasks: install.yml
+
+- name: Configure Jenkins.
+  import_tasks: configure.yml

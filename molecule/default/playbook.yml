@@ -1,0 +1,8 @@
+---
+- hosts: test
+  become: true
+  remote_user: root
+  roles:
+    - ansible-jenkins
+  vars:
+    jenkins_version: "{{ lookup('env','jenkins_version') }}"

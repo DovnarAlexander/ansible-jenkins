@@ -1,0 +1,104 @@
+---
+# file: defaults/main.yml
+
+# Do you want install Jenkins from stable rep or not
+jenkins_stable: True
+# What version should be installed
+jenkins_version: latest
+# Do you want to updated the Jenkins (if older version has been already installed)
+jenkins_update: False
+
+# Jenkins HTTP port
+jenkins_http_port: 8080
+# Jenkins Home path
+jenkins_home: /var/lib/jenkins
+# Jenkins External Hostname for main configuration
+jenkins_notification_hostname: 'http://{{ inventory_hostname }}:{{ jenkins_http_port }}/'
+# Jenkins EEmail for main configuration
+jenkins_notification_email: 'admin@example.com'
+
+# Jenkins New Admin details
+jenkins_admin:
+  id: jenkins
+  password: jenkins
+# Jenkins admin token location
+jenkins_admin_token_file: '{{ jenkins_home }}/secrets/admin_token'
+
+# List of required users to create
+# jenkins_users:
+#   -
+#     id: test-user
+#     email: test-user@gmail.com
+#     password: test-user
+jenkins_users: []
+# List of required Jenkins plugins to install
+jenkins_plugins:
+  - git
+  - workflow-aggregator
+  - jobConfigHistory
+  - ssh
+  - ssh-slaves
+# List of Nodes to create\configure
+# jenkins_nodes:
+#   -
+#     name: master
+#     type: master
+#     labels: master
+#     executors: 7
+#   -
+#     name: test-jnlp
+#     executors: 1
+#     labels: test-jnlp
+#     type: jnlp
+#     home_path: /home/jenkins
+#     description: 'test-jnlp'
+#   -
+#     name: test-ssh
+#     executors: 1
+#     labels: test-ssh
+#     type: ssh
+#     external_host: 127.0.0.1
+#     credentials: jenkins-local-slave
+#     home_path: '/var/lib/jenkins'
+#     description: 'test-ssh'
+#     environment:
+#       FOO: bar
+#       BAR: foo
+jenkins_nodes: []
+
+# Jenkins user-password pairs credentials
+# jenkins_userpass_credentials:
+#   -
+#     id: test-credentials
+#     description: "For test"
+#     username: test-credentials-user
+#     password: test-credentials-password
+jenkins_userpass_credentials: []
+# Jenkins secret-text credentials
+# jenkins_secret_text_credentials:
+#   -
+#     id: test-text-credentials
+#     description: "For test"
+#     secret_text: test-text-credentials
+jenkins_secret_text_credentials: []
+# Jenkins SSH credentials
+# jenkins_ssh_credentials:
+#   -
+#     id: test-ssh-user
+#     username: test-ssh-user
+#     print: True
+#     description: "For test"
+#   -
+#     id: jenkins-local-slave
+#     username: jenkins
+#     local: True
+#     description: "For test"
+jenkins_ssh_credentials: []
+
+# Required Python Pip packages
+pip_packages:
+  - lxml
+  - python-jenkins
+  - pyopenssl
+# Jenkins system user
+jenkins_system_user: jenkins

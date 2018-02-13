@@ -1,0 +1,24 @@
+---
+# file: tasks/set-jenkins-token.yml
+
+- block:
+
+  - name: Check if token file is present.
+    stat:
+      path: '{{ jenkins_admin_token_file }}'
+    register: jenkins_token_file_check
+
+  - block:
+
+    - name: 'Slurp {{ jenkins_admin_token_file }} file.'
+      slurp:
+        src: '{{ jenkins_admin_token_file }}'
+      register: jenkins_admin_token_file_content
+
+    - name: Set fact about admin token.
+      set_fact:
+        jenkins_admin_token: '{{ jenkins_admin_token_file_content.content | b64decode }}'
+
+    when: jenkins_token_file_check.stat.exists
+
+  no_log: True

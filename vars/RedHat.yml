@@ -1,0 +1,22 @@
+---
+# file: vars/CentOS.yml
+
+os_packages:
+  - git
+  - gcc
+  - epel-release
+  - python-pip
+  - python-devel
+  - openssl-devel
+  - tar
+  - zip
+  - unzip
+  - libselinux-python
+
+jenkins_key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+
+jenkins_repo: https://pkg.jenkins.io/redhat
+
+jenkins_sys_config: /etc/sysconfig/jenkins
+
+jenkins_sys_template: sysconfig-jenkins-config

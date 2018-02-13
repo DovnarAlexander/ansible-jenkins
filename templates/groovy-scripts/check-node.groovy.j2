@@ -1,0 +1,76 @@
+// Common section
+import java.lang.System
+import hudson.model.*
+import jenkins.model.*
+import hudson.slaves.*
+import hudson.model.Node.*
+import hudson.slaves.EnvironmentVariablesNodeProperty.Entry
+{% if item.type == 'master' %} 
+// Master Node section
+master = Jenkins.getInstance()
+def currentLabels = master.getLabelString().toString()
+def newLabel = ''
+def testLabels = '{{ item.labels }}'
+for (label in testLabels.split(' ')) {
+  if (!(label in currentLabels.split(' '))) {
+    newLabel = "${newLabel} ${label}"
+  }
+}
+master.setLabelString("${currentLabels} ${newLabel}")
+master.setNumExecutors({{ item.executors }})
+{% if item.environment is defined %}
+List<Entry> env = new ArrayList<Entry>();
+{% for key, value in item.environment.iteritems() %}
+env.add(new Entry("{{ key|e }}","{{ value|e }}"))
+{% endfor %}
+EnvironmentVariablesNodeProperty envPro = new EnvironmentVariablesNodeProperty(env);
+master.getNodeProperties().add(envPro)
+{% endif %}
+master.save()
+return "Master node been updated successfully."
+// Master Node section
+{% else %}
+{% if item.type == 'jnlp' %}
+// JNLP Section
+launcher = new JNLPLauncher()
+{% elif item.type == 'ssh' %}
+// SSH Section
+import hudson.plugins.sshslaves.*
+import hudson.plugins.sshslaves.verifiers.*
+
+SshHostKeyVerificationStrategy hostKeyVerificationStrategy = new NonVerifyingKeyVerificationStrategy()
+ComputerLauncher launcher = new SSHLauncher(
+        "{{ item.external_host }}", // Host
+        {{ item.port | default('22') }}, // Port
+        "{{ item.credentials }}", // Credentials
+        (String)null, // JVM Options
+        (String)null, // JavaPath
+        (String)null, // Prefix Start Slave Command
+        (String)null, // Suffix Start Slave Command
+        (Integer)null, // Connection Timeout in Seconds
+        (Integer)null, // Maximum Number of Retries
+        (Integer)null, // The number of seconds to wait between retries
+        hostKeyVerificationStrategy // Host Key Verification Strategy
+)
+{% endif %}
+// Define a "Permanent Agent"
+Slave agent = new DumbSlave(
+        "{{ item.name }}",
+        "{{ item.home_path }}",
+        launcher)
+agent.nodeDescription = "{{ item.description }}"
+agent.numExecutors = {{ item.executors }}
+agent.labelString = "{{ item.labels }}"
+agent.retentionStrategy = new RetentionStrategy.Always()
+{% if item.environment is defined %}
+List<Entry> env = new ArrayList<Entry>();
+{% for key, value in item.environment.iteritems() %}
+env.add(new Entry("{{ key|e }}","{{ value|e }}"))
+{% endfor %}
+EnvironmentVariablesNodeProperty envPro = new EnvironmentVariablesNodeProperty(env);
+agent.getNodeProperties().add(envPro)
+{% endif %}
+// Create a "Permanent Agent"
+Jenkins.instance.addNode(agent)
+return "Node has been created successfully."
+{% endif %}

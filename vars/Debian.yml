@@ -1,0 +1,20 @@
+---
+# file: vars/Ubuntu.yml
+
+os_packages:
+  - git
+  - gcc
+  - python-pip
+  - python-devel
+  - openssl-devel
+  - tar
+  - zip
+  - unzip
+
+jenkins_key: https://pkg.jenkins.io/debian/jenkins.io.key
+
+jenkins_repo: https://pkg.jenkins.io/debian
+
+jenkins_sys_config: /etc/default/jenkins
+
+jenkins_sys_template: default-jenkins-config

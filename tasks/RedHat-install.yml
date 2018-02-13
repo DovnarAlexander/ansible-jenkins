@@ -1,0 +1,15 @@
+---
+# file: tasks/RedHat-install.yml
+
+- name: Check that Jenkins YUM repository is installed.
+  yum_repository:
+    name: jenkins
+    description: '{{ jenkins_repo_desc }}'
+    baseurl: '{{ jenkins_repo_url }}'
+    gpgcheck: yes
+    state: present
+
+- name: Check that RPM key is installed.
+  rpm_key:
+    key: '{{ jenkins_key }}'
+    state: present

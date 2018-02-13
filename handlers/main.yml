@@ -1,0 +1,55 @@
+---
+# file: handlers/main.yml
+
+- name: Restart Jenkins service
+  service:
+    name: jenkins
+    state: restarted
+
+- name: First time load Jenkins
+  uri:
+    url: '{{ jenkins_url }}/login?from=%2F'
+    method: GET
+    return_content: yes
+  register: jenkins_load
+  until: ('Unlock Jenkins' in jenkins_load.content and jenkins_load|succeeded)
+  retries: 100
+  delay: 60
+  ignore_errors: yes
+
+- name: Stop Jenkins
+  service:
+    name: jenkins
+    state: stopped
+
+- name: Load Jenkins with Password
+  uri:
+    url: '{{ jenkins_url }}/login?from=%2F'
+    method: GET
+    user: '{{ jenkins_temp_admin_id }}'
+    password: '{{ jenkins_temp_admin_password }}'
+    force_basic_auth: yes
+    follow_redirects: all
+    return_content: yes
+  register: jenkins_load
+  until: ('Remember me on this computer' in jenkins_load.content and jenkins_load|succeeded)
+  retries: 100
+  delay: 60
+  ignore_errors: yes
+  no_log: True
+
+- name: Load Jenkins with Token
+  uri:
+    url: '{{ jenkins_url }}/login?from=%2F'
+    method: GET
+    user: '{{ jenkins_admin_username }}'
+    password: '{{ jenkins_admin_token }}'
+    force_basic_auth: yes
+    follow_redirects: all
+    return_content: yes
+  register: jenkins_load
+  until: ('Remember me on this computer' in jenkins_load.content and jenkins_load|succeeded)
+  retries: 100
+  delay: 60
+  ignore_errors: yes
+  no_log: True

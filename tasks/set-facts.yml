@@ -1,0 +1,26 @@
+---
+# file: tasks/set-facts.yml
+
+- name: Include all external variables.
+  include_vars: '{{ item }}.yml'
+  with_items:
+    - '{{ ansible_os_family }}'
+
+- name: Variable initialization.
+  set_fact:
+    jenkins_repo_url: '{{ jenkins_repo }}'
+    jenkins_repo_desc: Jenkins
+    jenkins_url: 'http://127.0.0.1:{{ jenkins_http_port }}'
+    jenkins_init_password_file: '{{ jenkins_home }}/secrets/initialAdminPassword'
+    jenkins_admin_username: '{{ jenkins_admin.id }}'
+    jenkins_plugin_params:
+      url: 'http://127.0.0.1:{{ jenkins_http_port }}'
+
+- name: Switch Jenkins Repo to Stable.
+  set_fact:
+    jenkins_repo_url: '{{ jenkins_repo }}-stable'
+    jenkins_repo_desc: Jenkins-stable
+  when: jenkins_stable
+
+- name: Set Jenkins token variable.
+  import_tasks: set-jenkins-token.yml

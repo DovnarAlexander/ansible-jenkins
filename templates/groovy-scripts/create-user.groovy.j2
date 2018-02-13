@@ -1,0 +1,74 @@
+import hudson.model.*
+import jenkins.model.*
+import hudson.security.*
+import hudson.tasks.Mailer
+
+// Get the jenkins instance.
+def instance = Jenkins.getInstance()
+
+// Get the authentication and authorization strategies
+authentication_strategy = instance.getSecurityRealm()
+authorization_strategy = instance.getAuthorizationStrategy()
+
+class Helper {
+    static void ensure_user(username, password, fullname, email, description=none) {
+        // Check if the user already exists
+        def instance = Jenkins.getInstance()
+        def user = instance.securityRealm.allUsers.find {it.id == username}
+
+        if (user == null) {
+            println("Adding user ${username}")
+            user = instance.securityRealm.createAccount(username, password)
+        }
+
+        // We make sure those fields ALWAYS have the desired values and are not changed manually. But we NEVER change
+        // the password. You are supposed to change it after the first boot.
+        user.setFullName(fullname)
+        // user.setDescription(description)
+        user.addProperty(new Mailer.UserProperty(email));
+    }
+}
+
+
+println("** Creating the configured users")
+switch (authentication_strategy) {
+  case HudsonPrivateSecurityRealm:
+    println("   * creating user {{item.id}}")
+    Helper.ensure_user(
+      "{{item.id}}",
+      "{{item.password|default(item.id)}}",
+      "{{item.fullname|default(item.id)}}",
+      "{{item.email|default('No email given')}}",
+      "{{item.description|default('No description given')}}"
+    )
+    break
+  default:
+    println("   * can not create users. authentication strategy not supported.")
+    break
+}
+
+{% if item.permissions is defined %}
+println("** Giving permissions to configured users.")
+switch(authorization_strategy) {
+  case GlobalMatrixAuthorizationStrategy:
+  case ProjectMatrixAuthorizationStrategy:
+    println("   * configuring permissions for user {{item.id}}")
+      {% for permission in item.permissions %}
+      permission = Permission.fromId("{{permission}}")
+      if (permission)
+        {
+        authorization_strategy.add(permission, "{{item.id}}")
+        }
+      else
+        {
+        println(permission)
+        println("   !!!! Unknown permission {{permission}}")
+        }
+      {% endfor %}
+    break
+  default:
+    println("   !!!! can not configure permissions. authorization strategy not supported.")
+}
+{% endif %}
+
+instance.save()

@@ -1,0 +1,174 @@
+---
+# file: tasks/install.yml
+
+- name: Import OS-family specific installation.
+  include_tasks: '{{ ansible_os_family }}-install.yml'
+
+- block:
+  - name: Update Jenkins to the latest version.
+    package:
+      name: jenkins
+      state: latest
+    when: jenkins_update
+    tags:
+      - skip_ansible_lint
+  - name: Install Latest Jenkins.
+    package:
+      name: jenkins
+      state: present
+    when: not jenkins_update
+  when: jenkins_version == 'latest'
+
+- name: 'Install Jenkins v.{{ jenkins_version }}.'
+  package:
+    name: 'jenkins-{{ jenkins_version }}'
+    state: present
+  when: jenkins_version != 'latest'
+
+- name: 'Check {{ jenkins_home|dirname }} path.'
+  file:
+    path: '{{ jenkins_home|dirname }}'
+    state: directory
+
+- name: 'Check {{ jenkins_home }} path.'
+  file:
+    path: '{{ jenkins_home }}'
+    owner: '{{ jenkins_system_user }}'
+    recurse: yes
+    state: directory
+
+- name: Check if initialAdminPassword file is present.
+  stat:
+    path: '{{ jenkins_init_password_file }}'
+  register: check_init_password
+  ignore_errors: yes
+  no_log: True
+
+- name: Start, Load and Stop Jenkins server.
+  service:
+    name: jenkins
+    enabled: yes
+    state: started
+  register: jenkins_fresh_start
+  notify:
+    - First time load Jenkins
+    - Stop Jenkins
+  when:
+    - not check_init_password.stat.exists
+    - jenkins_admin_token is undefined
+- meta: flush_handlers
+
+- name: 'Check {{ jenkins_sys_config }} configuration.'
+  template:
+    src: '{{ jenkins_sys_template }}.j2'
+    dest: '{{ jenkins_sys_config }}'
+  changed_when: jenkins_fresh_start is undefined
+  notify:
+    - Restart Jenkins service
+- meta: flush_handlers
+
+- block:
+
+  - name: Slurp remote Service file.
+    slurp:
+      src: '{{ jenkins_init_password_file }}'
+    register: jenkins_init_password_file
+
+  - name: Set temporary facts about Admin account.
+    set_fact:
+      jenkins_temp_admin_id: admin
+      jenkins_temp_admin_password: "{{ jenkins_init_password_file.content | b64decode | regex_replace('\\n','')}}"
+
+  - name: Set Jenkins plugins attributes.
+    set_fact:
+      jenkins_plugin_params: "{{ jenkins_plugin_params | combine( {'url_username' : jenkins_temp_admin_id} ) }}"
+      jenkins_plugin_secret: '{{ jenkins_temp_admin_password }}'
+      jenkins_load_handler: Load Jenkins with Password
+
+  no_log: True
+  when: jenkins_admin_token is undefined
+
+- name: Set Jenkins plugins attributes.
+  set_fact:
+    jenkins_plugin_params: "{{ jenkins_plugin_params | combine( {'url_username' : jenkins_admin.id} ) }}"
+    jenkins_plugin_secret: '{{ jenkins_admin_token }}'
+    jenkins_load_handler: Load Jenkins with Token
+  when: jenkins_admin_token is defined
+
+- name: Ensure that Jenkins is UP.
+  service:
+    name: jenkins
+    enabled: yes
+    state: started
+  notify:
+    - '{{ jenkins_load_handler }}'
+- meta: flush_handlers
+- name: Ensure that CSRF protection is turned off.
+  replace:
+    dest: '{{ jenkins_home }}/config.xml'
+    regexp: '{{ item }}'
+    replace: ''
+  with_items:
+    - '.*crumbIssuer*'
+    - '.excludeClientIPFromCrumb.*'
+  notify:
+    - Restart Jenkins service
+    - '{{ jenkins_load_handler }}'
+
+- meta: flush_handlers
+
+- name: Install all required Jenkins plugins.
+  jenkins_plugin:
+    name: '{{ item }}'
+    url_password: '{{ jenkins_plugin_secret }}'
+    params: '{{ jenkins_plugin_params }}'
+    timeout: 60000
+  with_items: '{{ jenkins_plugins }}'
+  notify:
+    - Restart Jenkins service
+    - '{{ jenkins_load_handler }}'
+
+- meta: flush_handlers
+
+- block:
+
+  - name: Check Admin user configuration.
+    jenkins_script:
+      script: "{{ lookup('template', 'templates/groovy-scripts/create-user.groovy.j2') }}"
+      url: '{{ jenkins_url }}'
+      user: '{{ jenkins_temp_admin_id }}'
+      password: '{{ jenkins_temp_admin_password }}'
+    with_items:
+      - '{{ jenkins_admin }}'
+
+  - name: Find raw remote token for admin user.
+    get_url:
+      url: '{{ jenkins_url }}/user/{{ jenkins_admin.id }}/configure'
+      url_username: '{{ jenkins_admin.id }}'
+      url_password: '{{ jenkins_admin.password }}'
+      force_basic_auth: yes
+      force: yes
+      dest: /tmp/token
+
+  - name: Slurp remote raw token.
+    slurp:
+      src: /tmp/token
+    register: raw_token_file
+
+  - name: Remove temp saved token.
+    file:
+      path: /tmp/token
+      state: absent
+
+  - name: 'Write down token into {{ jenkins_admin_token_file }}.'
+    copy:
+      content: "{{ raw_token_file.content | b64decode | regex_search ('value=.[0-9A-Za-z]{32}') | regex_replace('value=.','') }}"
+      dest: '{{ jenkins_admin_token_file }}'
+      mode: 0700
+      owner: '{{ jenkins_system_user }}'
+
+  - name: Set Jenkins token variable.
+    include_tasks: set-jenkins-token.yml
+
+  no_log: True
+  when: jenkins_admin_token is undefined

@@ -1,0 +1,21 @@
+---
+# file: tasks/prepare.yml
+
+- name: Ensure that all required packages are installed.
+  package:
+    name: '{{ item }}'
+    state: present
+  with_items: '{{ os_packages }}'
+
+- name: Ensure that all required python modules are installed.
+  pip:
+    name: '{{ item }}'
+    state: present
+  with_items: '{{ pip_packages }}'
+
+- name: 'Ensure that {{ jenkins_system_user }} user is configured.'
+  user:
+    name: '{{ jenkins_system_user }}'
+    home: '{{ jenkins_home }}'
+    createhome: no
+    state: present

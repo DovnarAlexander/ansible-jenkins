@@ -1,0 +1,77 @@
+---
+# file: tasks/configure.yml
+
+- name: Check main Jenkins configuration.
+  jenkins_script:
+    script: "{{ lookup('template', 'templates/groovy-scripts/change-main-configuration.groovy.j2') }}"
+    url: '{{ jenkins_url }}'
+    user: '{{ jenkins_admin_username }}'
+    password: '{{ jenkins_admin_token }}'
+  notify:
+    - Restart Jenkins service
+    - Load Jenkins with Token
+
+- block:
+
+  - name: Create all required user accounts.
+    jenkins_script:
+      script: "{{ lookup('template', 'templates/groovy-scripts/create-user.groovy.j2') }}"
+      url: '{{ jenkins_url }}'
+      user: '{{ jenkins_admin_username }}'
+      password: '{{ jenkins_admin_token }}'
+    with_items: '{{ jenkins_users }}'
+    notify:
+      - Restart Jenkins service
+      - Load Jenkins with Token
+
+  - name: Create all required username-password credentials entities.
+    jenkins_script:
+      script: "{{ lookup('template', 'templates/groovy-scripts/create-credentials.groovy.j2') }}"
+      url: '{{ jenkins_url }}'
+      user: '{{ jenkins_admin_username }}'
+      password: '{{ jenkins_admin_token }}'
+    with_items: '{{ jenkins_userpass_credentials }}'
+
+  - name: Create all required secret-text credentials.
+    jenkins_script:
+      script: "{{ lookup('template', 'templates/groovy-scripts/create-secret-text-credentials.groovy.j2') }}"
+      url: '{{ jenkins_url }}'
+      user: '{{ jenkins_admin_username }}'
+      password: '{{ jenkins_admin_token }}'
+    with_items: '{{ jenkins_secret_text_credentials }}'
+
+  - block:
+
+    - name: 'Ensure that {{ jenkins_home }}/.ssh is present.'
+      file:
+        path: '{{ jenkins_home }}/.ssh'
+        state: directory
+        owner: '{{ jenkins_system_user }}'
+        mode: 0700
+
+    - name: Ensure that ssh user config is ok.
+      template:
+        src: ssh.config.j2
+        dest: '{{ jenkins_home }}/.ssh/config'
+        owner: '{{ jenkins_system_user }}'
+        mode: 0600
+
+    - name: Create all required ssh credentials
+      include_tasks: create-ssh-credentials.yml
+      with_items: '{{ jenkins_ssh_credentials }}'
+
+    when: jenkins_ssh_credentials | length > 0
+  no_log: True
+
+- name: Check Jenkins nodes configuration.
+  jenkins_script:
+    script: "{{ lookup('template', 'templates/groovy-scripts/check-node.groovy.j2') }}"
+    url: '{{ jenkins_url }}'
+    user: '{{ jenkins_admin_username }}'
+    password: '{{ jenkins_admin_token }}'
+  with_items: '{{ jenkins_nodes }}'
+  notify:
+    - Restart Jenkins service
+    - Load Jenkins with Token
+
+- meta: flush_handlers
