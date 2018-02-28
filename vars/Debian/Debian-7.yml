@@ -4,3 +4,4 @@
 distr_os_packages:
   - daemon
   - psmisc
+  - procps
