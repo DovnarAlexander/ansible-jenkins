@@ -1,15 +1,10 @@
 ---
-# file: vars/Ubuntu.yml
+# file: vars/Debian.yml
 
-os_packages:
-  - git
-  - gcc
+family_os_packages:
+  - apt-transport-https
   - python-pip
-  - python-devel
-  - openssl-devel
-  - tar
-  - zip
-  - unzip
+  - libssl-dev
 
 jenkins_key: https://pkg.jenkins.io/debian/jenkins.io.key
 

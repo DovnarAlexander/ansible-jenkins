@@ -6,6 +6,24 @@
     name: jenkins
     state: restarted
 
+- name: Restart Jenkins with Password
+  uri:
+    url: '{{ jenkins_url }}/safeRestart'
+    force_basic_auth: yes
+    user: '{{ jenkins_temp_admin_id }}'
+    password: '{{ jenkins_temp_admin_password }}'
+    method: POST
+    status_code: 302
+
+- name: Restart Jenkins with Token
+  uri:
+    url: '{{ jenkins_url }}/safeRestart'
+    force_basic_auth: yes
+    user: '{{ jenkins_admin_username }}'
+    password: '{{ jenkins_admin_token }}'
+    method: POST
+    status_code: 302
+
 - name: First time load Jenkins
   uri:
     url: '{{ jenkins_url }}/login?from=%2F'
@@ -13,14 +31,8 @@
     return_content: yes
   register: jenkins_load
   until: ('Unlock Jenkins' in jenkins_load.content and jenkins_load|succeeded)
-  retries: 100
-  delay: 60
-  ignore_errors: yes
-
-- name: Stop Jenkins
-  service:
-    name: jenkins
-    state: stopped
+  retries: 50
+  delay: 10
 
 - name: Load Jenkins with Password
   uri:
@@ -33,9 +45,8 @@
     return_content: yes
   register: jenkins_load
   until: ('Remember me on this computer' in jenkins_load.content and jenkins_load|succeeded)
-  retries: 100
-  delay: 60
-  ignore_errors: yes
+  retries: 50
+  delay: 10
   no_log: True
 
 - name: Load Jenkins with Token
@@ -49,7 +60,6 @@
     return_content: yes
   register: jenkins_load
   until: ('Remember me on this computer' in jenkins_load.content and jenkins_load|succeeded)
-  retries: 100
-  delay: 60
-  ignore_errors: yes
+  retries: 50
+  delay: 10
   no_log: True

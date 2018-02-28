@@ -1,0 +1,31 @@
+---
+# file: tasks/Debian-install.yml
+
+- name: Check that APT key is installed.
+  apt_key:
+    url: '{{ jenkins_key }}'
+    state: present
+
+- name: Check that Jenkins APT repository is installed.
+  apt_repository:
+    repo: "deb {{ jenkins_repo_url }} binary/"
+    state: present
+
+- name: 'Download {{ jenkins_version }} and Install with Shell.'
+  shell: |
+    apt-get download {{ jenkins_package }}
+    deb_package=$(find . -name "*jenkins*.deb")
+    dpkg -i --ignore-depends=default-jre-headless $deb_package
+  args:
+    chdir: /tmp
+    creates: '{{ jenkins_home }}/config.xml'
+  when: jenkins_installer == 'shell'
+  tags:
+    - skip_ansible_lint
+
+- name: 'Install Jenkins {{ jenkins_version }} version.'
+  apt:
+    name: '{{ jenkins_package }}'
+    update_cache: yes
+    state: present
+  when: jenkins_installer == 'apt'

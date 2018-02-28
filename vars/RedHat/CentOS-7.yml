@@ -1,0 +1,4 @@
+---
+# file: vars/CentOS-7.yml
+
+distr_os_packages: []

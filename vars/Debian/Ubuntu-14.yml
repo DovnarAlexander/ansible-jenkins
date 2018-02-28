@@ -1,0 +1,8 @@
+---
+# file: vars/Ubuntu-14.yml
+
+distr_os_packages:
+  - libxml2-dev
+  - libxslt1-dev
+  - daemon
+  - psmisc

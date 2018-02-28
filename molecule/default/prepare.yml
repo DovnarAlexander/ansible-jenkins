@@ -3,7 +3,7 @@
   hosts: all
   gather_facts: False
   pre_tasks:
-    - name: Install python for Ansible
-      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+    - name: Install Python.
+      raw: test -e /usr/bin/python || (apt-get -y update && apt-get install -y python-minimal)
       changed_when: False
       ignore_errors: yes

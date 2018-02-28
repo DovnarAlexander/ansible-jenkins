@@ -1,0 +1,11 @@
+---
+# file: vars/common.yml
+
+os_packages:
+  - git
+  - gcc
+  - tar
+  - zip
+  - curl
+  - unzip
+  - net-tools

@@ -2,9 +2,11 @@
 # file: tasks/set-facts.yml
 
 - name: Include all external variables.
-  include_vars: '{{ item }}.yml'
+  include_vars: '{{ item }}'
   with_items:
-    - '{{ ansible_os_family }}'
+    - main.yml
+    - '{{ ansible_os_family }}/main.yml'
+    - '{{ ansible_os_family }}/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'
 
 - name: Variable initialization.
   set_fact:
@@ -15,6 +17,31 @@
     jenkins_admin_username: '{{ jenkins_admin.id }}'
     jenkins_plugin_params:
       url: 'http://127.0.0.1:{{ jenkins_http_port }}'
+
+- block:
+
+  - name: Variable initialization (Debian Family).
+    set_fact:
+      jenkins_installer: apt
+
+  - name: Set package name (latest).
+    set_fact:
+      jenkins_package: jenkins
+    when: jenkins_version == 'latest'
+
+  - name: Set package name ({{ jenkins_version }}).
+    set_fact:
+      jenkins_package: 'jenkins={{ jenkins_version }}'
+    when: jenkins_version != 'latest'
+
+  - name: Old Linux versions re-initialization.
+    set_fact:
+      jenkins_installer: shell
+    when: ansible_distribution_release == 'trusty' or
+          ansible_distribution_release == 'jessie' or
+          ansible_distribution_release == 'wheezy'
+
+  when: "ansible_os_family == 'Debian'"
 
 - name: Switch Jenkins Repo to Stable.
   set_fact:

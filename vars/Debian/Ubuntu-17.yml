@@ -1,0 +1,4 @@
+---
+# file: vars/Ubuntu-17.yml
+
+distr_os_packages: []

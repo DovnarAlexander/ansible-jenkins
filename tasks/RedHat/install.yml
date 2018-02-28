@@ -13,3 +13,10 @@
   rpm_key:
     key: '{{ jenkins_key }}'
     state: present
+
+- name: 'Install Jenkins {{ jenkins_version }} version.'
+  yum:
+    name: 'jenkins-{{ jenkins_version }}'
+    update_cache: yes
+    state: present
+  when: jenkins_version != 'latest'

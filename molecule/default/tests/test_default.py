@@ -8,34 +8,40 @@ testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
 
 def test_packages(host):
     packages = [
-        "tar"
+        "tar",
+        "git",
+        "unzip"
     ]
     for package in packages:
         p = host.package(package)
         assert p.is_installed
 
 
-def test_java_present_in_path(host):
-    assert host.exists("java")
+def test_correct_jenkins_version_installed(host):
+    target_version = os.environ['jenkins_test_version']
+    jenkins = 'http://127.0.0.1:8080'
+    uri = 'login?from=%2F'
+    command = "curl '"+jenkins+'/'+uri+"'"
+    command += "|egrep 'Jenkins ver.+<.a' -o"
+    o = host.run(command)
+    assert target_version in o.stdout
 
 
-def test_correct_java_version_installed(host):
-    major = os.environ['java_major']
-    minor = os.environ['java_minor']
-    if major == '9':
-        version = "\"%s.0.%s\"" % (major, minor)
-    else:
-        version = "\"1.%s.0_%s\"" % (major, minor)
-    o = host.run("java -version")
-    assert version in o.stderr.split()
-
-
-def test_correct_javahome_set(host):
-    major = os.environ['java_major']
-    minor = os.environ['java_minor']
-    if major == '9':
-        home = "/opt/java/jdk-%s.0.%s" % (major, minor)
-    else:
-        home = "/opt/java/jdk1.%s.0_%s" % (major, minor)
-    o = host.run(". /etc/environment && echo $JAVA_HOME")
-    assert home in o.stdout.split()
+def test_corrent_jenkins_plugin_installed(host):
+    target_plugin_list = [
+        'git',
+        'workflow-aggregator',
+        'jobConfigHistory',
+        'ssh',
+        'ssh-slaves'
+    ]
+    jenkins = 'http://127.0.0.1:8080'
+    uri = 'pluginManager/api/xml'
+    request = 'depth=1&xpath=/*/*/shortName&wrapper=plugins'
+    web_request = uri + '?' + request
+    command = "curl -u jenkins:jenkins '"+jenkins+'/'+web_request+"'"
+    command += "| grep -o '"
+    for plugin in target_plugin_list:
+        com = command + plugin + "'"
+        o = host.run(com)
+        assert plugin in o.stdout

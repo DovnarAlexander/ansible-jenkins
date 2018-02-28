@@ -1,10 +1,19 @@
-Role Name
+[![Build Status](https://img.shields.io/travis/fubarhouse/ansible-role-python/master.svg?style=for-the-badge)](https://travis-ci.org/DovnarAlexander/ansible-jenkins)
+[![Ansible Galaxy](https://img.shields.io/ansible/role/24099.svg?style=for-the-badge)](https://galaxy.ansible.com/DovnarAlexander/jenkins)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](https://raw.githubusercontent.com/DovnarAlexander/jenkins/master/LICENSE)
+
+DovnarAlexander/jenkins
 =========
 
-Role name in Ansible Galaxy: **[DovnarAlexander/jenkins](https://galaxy.ansible.com/DovnarAlexander/jenkins)**
+**[Ansible Galaxy DovnarAlexander/jenkins](https://galaxy.ansible.com/DovnarAlexander/jenkins)**
 
-This role helps you to install any version of Jenkins.
-Also it creates all required Jenkins users, credentials, installs plugins and configures Jenkins Slaves (JNLP and SSH).
+This role helps you to install any version of Jenkins (LTS and Not).
+It manages:
+- Jenkins users;
+- Credentials (SSH including key generation, Secret Text and Username-Password);
+- Installs plugins;
+- Jenkins Slaves (JNLP and SSH);
+- Some Jenkins main configuration (the main Hostname and Email).
 
 Role Variables
 --------------
@@ -135,7 +144,7 @@ jenkins_plugins:
   - jobConfigHistory
   - ssh
   - ssh-slaves
-
+  - mailer
 ```
 
 The list of Jenkins plugins which should be installed during installation.
@@ -235,9 +244,11 @@ Using this list of dicts you can create all required SSH credentials.
 
 # Required Python Pip packages
 pip_packages:
+  - setuptools
   - lxml
   - python-jenkins
   - pyopenssl
+  - urllib3
 
 ```
 
@@ -246,9 +257,20 @@ The list of Python Pip packages to install.
 ```yaml
 # file: defaults/main.yml
 
+# Pip index URL
+pip_index_url: https://pypi.python.org/simple/
+
+```
+
+Full URL to pipy installation simple repository.
+
+Jenkins Process Linux owner.
+
+```yaml
+# file: defaults/main.yml
+
 # Jenkins system user
 jenkins_system_user: jenkins
-
 
 ```
 
@@ -266,7 +288,7 @@ Add role name `DovnarAlexander.jenkins` to your playbook file.
 If you want to install Java using **[DovnarAlexander/oracle-java](https://galaxy.ansible.com/DovnarAlexander/oracle-java)** playbook - install it with requirements.yml
 
 ```
-ansible-galaxy install -r requirements.yml
+ansible-galaxy install DovnarAlexander.oracle-java
 ```
 
 ### Step 3: add variables

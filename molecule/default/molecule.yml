@@ -1,6 +1,8 @@
 ---
 dependency:
   name: galaxy
+  options:
+    role-file: molecule/requirements.yml
 driver:
   name: docker
 lint:
@@ -8,11 +10,12 @@ lint:
   options:
     config-file: molecule/yamllint.yml
 platforms:
-  - name: "java-test-${distribution}-${version}"
+  - name: "jenkins-test-${distribution}-${version}"
     image: "${distribution}:${version}"
-    privileged: 'true'
+    privileged: True
     groups:
       - test
+      - java
 provisioner:
   name: ansible
   lint:
@@ -21,14 +24,15 @@ scenario:
   name: default
   test_sequence:
     - lint
+    - destroy
     - dependency
     - syntax
-    - destroy
     - create
     - prepare
     - converge
-    - verify
     - idempotence
+    - side_effect
+    - verify
     - destroy
 verifier:
   name: testinfra

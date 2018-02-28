@@ -1,17 +1,15 @@
 ---
-# file: vars/CentOS.yml
+# file: vars/RedHat.yml
 
-os_packages:
-  - git
-  - gcc
+family_os_packages:
   - epel-release
-  - python-pip
+  - yum-utils
+  - initscripts
+  - libselinux-python
+  - libffi-devel
   - python-devel
   - openssl-devel
-  - tar
-  - zip
-  - unzip
-  - libselinux-python
+  - python-pip
 
 jenkins_key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
 

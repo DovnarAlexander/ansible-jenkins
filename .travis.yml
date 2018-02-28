@@ -7,33 +7,86 @@ services:
 env:
   - distribution: centos
     version: 7
-    jenkins_version: 2.89.3
+    jenkins_stable: True
+    jenkins_version: latest
+    jenkins_test_version: 2.89.4
+  - distribution: centos
+    version: 7
+    jenkins_stable: False
+    jenkins_version: latest
+    jenkins_test_version: 2.109
   - distribution: centos
     version: 6
+    jenkins_stable: True
     jenkins_version: 2.73.3
-  - distribution: debian
-    version: jessie
-    jenkins_version: 2.89.3
+    jenkins_test_version: 2.73.3
+  - distribution: centos
+    version: 6
+    jenkins_stable: False
+    jenkins_version: 2.102
+    jenkins_test_version: 2.102
   - distribution: ubuntu
     version: artful
-    jenkins_version: 2.60.3
+    jenkins_stable: True
+    jenkins_version: 2.73.3
+    jenkins_test_version: 2.73.3
+  - distribution: ubuntu
+    version: artful
+    jenkins_stable: False
+    jenkins_version: 2.99
+    jenkins_test_version: 2.99
   - distribution: ubuntu
     version: xenial
-    jenkins_version: 2.73.3
+    jenkins_stable: True
+    jenkins_version: latest
+    jenkins_test_version: 2.89.4
+  - distribution: ubuntu
+    version: xenial
+    jenkins_stable: False
+    jenkins_version: 2.102
+    jenkins_test_version: 2.102
   - distribution: ubuntu
     version: trusty
-    jenkins_version: 2.89.3
+    jenkins_stable: True
+    jenkins_version: latest
+    jenkins_test_version: 2.89.4
+  - distribution: ubuntu
+    version: trusty
+    jenkins_stable: False
+    jenkins_version: latest
+    jenkins_test_version: 2.109
+  - distribution: debian
+    version: 8
+    jenkins_stable: True
+    jenkins_version: latest
+    jenkins_test_version: 2.89.4
+  - distribution: debian
+    version: 8
+    jenkins_stable: False
+    jenkins_version: latest
+    jenkins_test_version: 2.109
+  - distribution: debian
+    version: 7
+    jenkins_stable: True
+    jenkins_version: 2.73.3
+    jenkins_test_version: 2.73.3
+  - distribution: debian
+    version: 7
+    jenkins_stable: False
+    jenkins_version: 2.102
+    jenkins_test_version: 2.102
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y python-pip libssl-dev
-  - pip install docker-py
-  - /usr/bin/env
 install:
-  - pip install molecule==2.5.0
+  - sudo apt-get install -qq -y python-pip libssl-dev
+  - pip install docker-py
   - pip install ansible==2.4.0
+  - pip install molecule==2.5.0
+before_script:
   - ansible --version
   - molecule --version
   - py.test --version
-
+  - echo 'Environment list:'
+  - /usr/bin/env
 script:
   - molecule test

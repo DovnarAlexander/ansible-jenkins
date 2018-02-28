@@ -1,8 +1,8 @@
 ---
 # file: tasks/install.yml
 
-- name: Import OS-family specific installation.
-  include_tasks: '{{ ansible_os_family }}-install.yml'
+- name: Run OS-family specific installation.
+  include_tasks: '{{ ansible_os_family }}/install.yml'
 
 - block:
   - name: Update Jenkins to the latest version.
@@ -18,12 +18,6 @@
       state: present
     when: not jenkins_update
   when: jenkins_version == 'latest'
-
-- name: 'Install Jenkins v.{{ jenkins_version }}.'
-  package:
-    name: 'jenkins-{{ jenkins_version }}'
-    state: present
-  when: jenkins_version != 'latest'
 
 - name: 'Check {{ jenkins_home|dirname }} path.'
   file:
@@ -44,30 +38,27 @@
   ignore_errors: yes
   no_log: True
 
-- name: Start, Load and Stop Jenkins server.
-  service:
-    name: jenkins
-    enabled: yes
-    state: started
-  register: jenkins_fresh_start
-  notify:
-    - First time load Jenkins
-    - Stop Jenkins
-  when:
-    - not check_init_password.stat.exists
-    - jenkins_admin_token is undefined
-- meta: flush_handlers
-
-- name: 'Check {{ jenkins_sys_config }} configuration.'
-  template:
-    src: '{{ jenkins_sys_template }}.j2'
-    dest: '{{ jenkins_sys_config }}'
-  changed_when: jenkins_fresh_start is undefined
-  notify:
-    - Restart Jenkins service
-- meta: flush_handlers
+- name: Set Jenkins plugins attributes.
+  set_fact:
+    jenkins_plugin_params: "{{ jenkins_plugin_params | combine( {'url_username' : jenkins_admin.id} ) }}"
+    jenkins_remote_user: '{{ jenkins_admin.id }}'
+    jenkins_remote_secret: '{{ jenkins_admin_token }}'
+    jenkins_restart_handler: Restart Jenkins with Token
+    jenkins_load_handler: Load Jenkins with Token
+  no_log: True
+  when: jenkins_admin_token is defined
 
 - block:
+  - name: Start, Load and Stop Jenkins server.
+    service:
+      name: jenkins
+      enabled: yes
+      state: started
+    notify:
+      - First time load Jenkins
+    when:
+      - not check_init_password.stat.exists
+  - meta: flush_handlers
 
   - name: Slurp remote Service file.
     slurp:
@@ -82,35 +73,71 @@
   - name: Set Jenkins plugins attributes.
     set_fact:
       jenkins_plugin_params: "{{ jenkins_plugin_params | combine( {'url_username' : jenkins_temp_admin_id} ) }}"
-      jenkins_plugin_secret: '{{ jenkins_temp_admin_password }}'
+      jenkins_remote_user: '{{ jenkins_temp_admin_id }}'
+      jenkins_remote_secret: '{{ jenkins_temp_admin_password }}'
+      jenkins_restart_handler: Restart Jenkins with Password
       jenkins_load_handler: Load Jenkins with Password
 
   no_log: True
   when: jenkins_admin_token is undefined
 
-- name: Set Jenkins plugins attributes.
-  set_fact:
-    jenkins_plugin_params: "{{ jenkins_plugin_params | combine( {'url_username' : jenkins_admin.id} ) }}"
-    jenkins_plugin_secret: '{{ jenkins_admin_token }}'
-    jenkins_load_handler: Load Jenkins with Token
-  when: jenkins_admin_token is defined
+- name: Ensure that runWizard Turned off.
+  jenkins_script:
+    script: |
+      import static jenkins.model.Jenkins.instance as jenkins
+      import jenkins.install.InstallState
+      if (!jenkins.installState.isSetupComplete()) {
+        InstallState.INITIAL_SETUP_COMPLETED.initializeState()
+      }
+    user: '{{ jenkins_remote_user }}'
+    password: '{{ jenkins_remote_secret }}'
+
+- name: Stop Jenkins service
+  service:
+    name: jenkins
+    state: stopped
+  when: jenkins_admin_token is undefined
 
 - name: Ensure that Jenkins is UP.
   service:
     name: jenkins
-    enabled: yes
+    pattern: jenkins.war
     state: started
   notify:
     - '{{ jenkins_load_handler }}'
+
 - meta: flush_handlers
+
+- name: 'Check {{ jenkins_sys_config }} configuration.'
+  template:
+    src: '{{ jenkins_sys_template }}.j2'
+    dest: '{{ jenkins_sys_config }}'
+    backup: yes
+  notify:
+    - Restart Jenkins service
+    - '{{ jenkins_load_handler }}'
+
 - name: Ensure that CSRF protection is turned off.
-  replace:
-    dest: '{{ jenkins_home }}/config.xml'
-    regexp: '{{ item }}'
-    replace: ''
-  with_items:
-    - '.*crumbIssuer*'
-    - '.excludeClientIPFromCrumb.*'
+  jenkins_script:
+    script: |
+      import hudson.security.csrf.DefaultCrumbIssuer
+      import jenkins.model.Jenkins
+      if(!Jenkins.instance.isQuietingDown()) {
+        def j = Jenkins.instance
+        if(j.getCrumbIssuer() != null) {
+            j.setCrumbIssuer(null)
+            j.save()
+            println 'CSRF Protection configuration has changed.  Disabled CSRF Protection.'
+        }
+        else {
+            println 'Nothing changed.  CSRF Protection already configured.'
+        }
+      }
+      else {
+        println "Shutdown mode enabled.  Configure CSRF protection SKIPPED."
+      }
+    user: '{{ jenkins_remote_user }}'
+    password: '{{ jenkins_remote_secret }}'
   notify:
     - Restart Jenkins service
     - '{{ jenkins_load_handler }}'
@@ -120,12 +147,13 @@
 - name: Install all required Jenkins plugins.
   jenkins_plugin:
     name: '{{ item }}'
-    url_password: '{{ jenkins_plugin_secret }}'
+    url_password: '{{ jenkins_remote_secret }}'
     params: '{{ jenkins_plugin_params }}'
-    timeout: 60000
+    timeout: 100
+    updates_expiration: 0
   with_items: '{{ jenkins_plugins }}'
   notify:
-    - Restart Jenkins service
+    - '{{ jenkins_restart_handler }}'
     - '{{ jenkins_load_handler }}'
 
 - meta: flush_handlers

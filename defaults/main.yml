@@ -38,6 +38,7 @@ jenkins_plugins:
   - jobConfigHistory
   - ssh
   - ssh-slaves
+  - mailer
 # List of Nodes to create\configure
 # jenkins_nodes:
 #   -
@@ -97,8 +98,14 @@ jenkins_ssh_credentials: []
 
 # Required Python Pip packages
 pip_packages:
+  - setuptools
   - lxml
   - python-jenkins
   - pyopenssl
+  - urllib3
+
+# Pip index URL
+pip_index_url: https://pypi.python.org/simple/
+
 # Jenkins system user
 jenkins_system_user: jenkins

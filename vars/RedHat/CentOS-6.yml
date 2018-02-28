@@ -1,0 +1,6 @@
+---
+# file: vars/CentOS-6.yml
+
+distr_os_packages:
+  - libxml2-devel
+  - libxslt-devel

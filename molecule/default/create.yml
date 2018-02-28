@@ -18,7 +18,9 @@
         recreate: False
         log_driver: syslog
         command: "{{ item.command | default('sleep infinity') }}"
+        security_opts: "{{ item.security_opts | default(omit) }}"
         privileged: "{{ item.privileged | default(omit) }}"
         volumes: "{{ item.volumes | default(omit) }}"
         capabilities: "{{ item.capabilities | default(omit) }}"
+        env: "{{ item.environment | default(omit) }}"
       with_items: "{{ molecule_yml.platforms }}"

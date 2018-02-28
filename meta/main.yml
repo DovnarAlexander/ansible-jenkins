@@ -16,11 +16,12 @@ galaxy_info:
         - trusty
     - name: Debian
       versions:
+        - wheezy
         - jessie
     - name: EL
       versions:
-        - 6
         - 7
+        - 6
   galaxy_tags:
     - cicd
     - jenkins

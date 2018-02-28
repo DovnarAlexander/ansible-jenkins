@@ -1,0 +1,6 @@
+---
+# file: vars/Debian-7.yml
+
+distr_os_packages:
+  - daemon
+  - psmisc

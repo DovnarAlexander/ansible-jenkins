@@ -5,13 +5,21 @@
   package:
     name: '{{ item }}'
     state: present
-  with_items: '{{ os_packages }}'
+  with_items:
+    - '{{ os_packages }}'
+    - '{{ family_os_packages }}'
+    - '{{ distr_os_packages }}'
 
-- name: Ensure that all required python modules are installed.
+- name: Ensure that Pip and all required python modules are up-to-date.
   pip:
     name: '{{ item }}'
-    state: present
-  with_items: '{{ pip_packages }}'
+    state: latest
+    extra_args: '-i {{ pip_index_url }}'
+  with_items:
+    - pip
+    - '{{ pip_packages }}'
+  tags:
+    - skip_ansible_lint
 
 - name: 'Ensure that {{ jenkins_system_user }} user is configured.'
   user:
@@ -19,3 +27,15 @@
     home: '{{ jenkins_home }}'
     createhome: no
     state: present
+
+- name: Check if java is installed.
+  shell: java -version
+  register: java_check
+  changed_when: False
+  tags:
+    - skip_ansible_lint
+
+- name: Raise a Fail if java is absent.
+  fail:
+    msg: "Java is not installed!"
+  when: not java_check|success
