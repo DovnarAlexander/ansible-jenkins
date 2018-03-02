@@ -15,10 +15,12 @@
     name: '{{ item }}'
     state: latest
     extra_args: '-i {{ pip_index_url }}'
+  become: True
   with_items:
     - pip
     - '{{ pip_packages }}'
   tags:
+    - Remote_Jenkins
     - skip_ansible_lint
 
 - name: 'Ensure that {{ jenkins_system_user }} user is configured.'
