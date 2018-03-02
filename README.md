@@ -14,6 +14,7 @@ It manages:
 - Installs plugins;
 - Jenkins Slaves (JNLP and SSH);
 - Some Jenkins main configuration (the main Hostname and Email).
+- You can manage as much as possible when you do not have direct SSH connection to Jenkins with "Remote_Jenkins" tag.
 
 Role Variables
 --------------
