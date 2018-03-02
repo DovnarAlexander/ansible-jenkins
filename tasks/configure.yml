@@ -7,9 +7,12 @@
     url: '{{ jenkins_url }}'
     user: '{{ jenkins_admin_username }}'
     password: '{{ jenkins_admin_token }}'
+  tags:
+    - Remote_Jenkins
   notify:
-    - Restart Jenkins service
+    - Restart Jenkins with Token
     - Load Jenkins with Token
+- meta: flush_handlers
 
 - block:
 
@@ -20,9 +23,8 @@
       user: '{{ jenkins_admin_username }}'
       password: '{{ jenkins_admin_token }}'
     with_items: '{{ jenkins_users }}'
-    notify:
-      - Restart Jenkins service
-      - Load Jenkins with Token
+    tags:
+      - Remote_Jenkins
 
   - name: Create all required username-password credentials entities.
     jenkins_script:
@@ -30,6 +32,8 @@
       url: '{{ jenkins_url }}'
       user: '{{ jenkins_admin_username }}'
       password: '{{ jenkins_admin_token }}'
+    tags:
+      - Remote_Jenkins
     with_items: '{{ jenkins_userpass_credentials }}'
 
   - name: Create all required secret-text credentials.
@@ -38,6 +42,8 @@
       url: '{{ jenkins_url }}'
       user: '{{ jenkins_admin_username }}'
       password: '{{ jenkins_admin_token }}'
+    tags:
+      - Remote_Jenkins
     with_items: '{{ jenkins_secret_text_credentials }}'
 
   - block:
@@ -70,8 +76,5 @@
     user: '{{ jenkins_admin_username }}'
     password: '{{ jenkins_admin_token }}'
   with_items: '{{ jenkins_nodes }}'
-  notify:
-    - Restart Jenkins service
-    - Load Jenkins with Token
-
-- meta: flush_handlers
+  tags:
+    - Remote_Jenkins
