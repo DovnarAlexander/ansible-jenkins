@@ -10,8 +10,8 @@
   uri:
     url: '{{ jenkins_url }}/safeRestart'
     force_basic_auth: yes
-    user: '{{ jenkins_admin_username }}'
-    password: '{{ jenkins_remote_secret }}'
+    user: '{{ jenkins_temp_admin_id }}'
+    password: '{{ jenkins_temp_admin_password }}'
     method: POST
     status_code: 302
 
