@@ -147,6 +147,7 @@
 - name: Install all required Jenkins plugins.
   jenkins_plugin:
     name: '{{ item }}'
+    jenkins_home: '{{ jenkins_home }}'
     url_password: '{{ jenkins_remote_secret }}'
     params: '{{ jenkins_plugin_params }}'
     timeout: 100
