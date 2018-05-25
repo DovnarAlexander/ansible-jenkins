@@ -13,7 +13,7 @@
 - name: Ensure that Pip and all required python modules are up-to-date.
   pip:
     name: '{{ item }}'
-    state: latest
+    state: 'present'
     extra_args: '-i {{ pip_index_url }}'
   become: True
   with_items:
