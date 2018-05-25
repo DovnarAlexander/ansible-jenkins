@@ -9,12 +9,12 @@ env:
     version: 7
     jenkins_stable: True
     jenkins_version: latest
-    jenkins_test_version: 2.89.4
+    jenkins_test_version: 2.107.3
   - distribution: centos
     version: 7
     jenkins_stable: False
     jenkins_version: latest
-    jenkins_test_version: 2.109
+    jenkins_test_version: 2.124
   - distribution: centos
     version: 6
     jenkins_stable: True
@@ -39,7 +39,7 @@ env:
     version: xenial
     jenkins_stable: True
     jenkins_version: latest
-    jenkins_test_version: 2.89.4
+    jenkins_test_version: 2.107.3
   - distribution: ubuntu
     version: xenial
     jenkins_stable: False
@@ -49,22 +49,22 @@ env:
     version: trusty
     jenkins_stable: True
     jenkins_version: latest
-    jenkins_test_version: 2.89.4
+    jenkins_test_version: 2.107.3
   - distribution: ubuntu
     version: trusty
     jenkins_stable: False
     jenkins_version: latest
-    jenkins_test_version: 2.109
+    jenkins_test_version: 2.124
   - distribution: debian
     version: 8
     jenkins_stable: True
     jenkins_version: latest
-    jenkins_test_version: 2.89.4
+    jenkins_test_version: 2.107.3
   - distribution: debian
     version: 8
     jenkins_stable: False
     jenkins_version: latest
-    jenkins_test_version: 2.109
+    jenkins_test_version: 2.124
   - distribution: debian
     version: 7
     jenkins_stable: True
